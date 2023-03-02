@@ -83,7 +83,19 @@ const AppContainer = () => {
   // 수정기능
   const updateTodo = (todo: TodoType) => {};
   // 삭제기능
-  const deleteTodo = (todo: TodoType) => {};
+  const deleteTodo = (todo: TodoType) => {
+    let index = todoList.findIndex((item) => todo.uid === item.uid);
+    // state 의 목록을 삭제 후 갱신한다. 불변성 라이브러리 (immer) 활용
+    // let newTodoList = produce( 대상, (draft) => {})
+    let newTodoList = produce(todoList, (draft) => {
+      // index 의 순서로 부터 1개를 제거하고
+      // 나머지 배열을 리턴한다.
+      // 즉, 원본을 복사해서 새로운 배열을 만들고 그 중에 1개를 제거한후
+      // 새로운 배열을 리턴하여 state 를 업데이트 한다.
+      draft.splice(index, 1);
+    });
+    setTodoList(newTodoList);
+  };
   // 정렬기능
   const sortTodo = (sortType: string) => {};
   return (
