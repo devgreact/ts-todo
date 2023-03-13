@@ -1,57 +1,154 @@
-import React from "react";
-import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import { Button, Checkbox, Form, Input } from "antd";
+import React, { useEffect } from "react";
+
+import { Button, Checkbox, Form, Input, Space } from "antd";
+import { useNavigate } from "react-router-dom";
+import { CallBacksFireBaseType } from "../AppContainer";
+
+const formItemLayout = {
+  labelCol: {
+    xs: { span: 24 },
+    sm: { span: 8 },
+  },
+  wrapperCol: {
+    xs: { span: 24 },
+    sm: { span: 16 },
+  },
+};
+
+const tailFormItemLayout = {
+  wrapperCol: {
+    xs: {
+      span: 24,
+      offset: 0,
+    },
+    sm: {
+      span: 16,
+      offset: 8,
+    },
+  },
+};
+type PropsType = {
+  callBacksFireBase: CallBacksFireBaseType;
+  userLogin: Boolean;
+};
 // css 코드는 App.css 넣어둠.
-const Join = () => {
+const Join = ({ callBacksFireBase, userLogin }: PropsType) => {
+  // 웹브라우저 내용 갱신
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
+
   const onFinish = (values: any) => {
+    // firebase 로 회원가입에 필요한 정보 전송
     console.log("Received values of form: ", values);
+    callBacksFireBase.fbJoin(values.email, values.password);
   };
+
+  useEffect(() => {
+    if (userLogin) {
+      navigate("/");
+    }
+  }, [userLogin]);
+
   return (
-    <div style={{ paddingBottom: 20, minHeight: 500 }}>
+    <div style={{ paddingBottom: 20, minHeight: 300 }}>
       <Form
-        name="normal_login"
-        className="login-form"
-        initialValues={{ remember: true }}
+        {...formItemLayout}
+        form={form}
+        name="register"
         onFinish={onFinish}
+        initialValues={{}}
+        style={{ maxWidth: "95%" }}
+        scrollToFirstError
       >
         <Form.Item
-          name="username"
-          rules={[{ required: true, message: "Please input your Username!" }]}
+          name="email"
+          label="E-mail"
+          rules={[
+            {
+              type: "email",
+              message: "The input is not valid E-mail!",
+            },
+            {
+              required: true,
+              message: "Please input your E-mail!",
+            },
+          ]}
         >
-          <Input
-            prefix={<UserOutlined className="site-form-item-icon" />}
-            placeholder="Username"
-          />
+          <Input />
         </Form.Item>
+
         <Form.Item
           name="password"
-          rules={[{ required: true, message: "Please input your Password!" }]}
+          label="Password"
+          rules={[
+            {
+              required: true,
+              message: "Please input your password!",
+            },
+          ]}
+          hasFeedback
         >
-          <Input
-            prefix={<LockOutlined className="site-form-item-icon" />}
-            type="password"
-            placeholder="Password"
-          />
-        </Form.Item>
-        <Form.Item>
-          <Form.Item name="remember" valuePropName="checked" noStyle>
-            <Checkbox>Remember me</Checkbox>
-          </Form.Item>
-
-          <a className="login-form-forgot" href="">
-            Forgot password
-          </a>
+          <Input.Password />
         </Form.Item>
 
-        <Form.Item>
-          <Button
-            type="primary"
-            htmlType="submit"
-            className="login-form-button"
-          >
-            Log in
-          </Button>
-          Or <a href="">register now!</a>
+        <Form.Item
+          name="confirm"
+          label="Confirm Password"
+          dependencies={["password"]}
+          hasFeedback
+          rules={[
+            {
+              required: true,
+              message: "Please confirm your password!",
+            },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue("password") === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(
+                  new Error("The two passwords that you entered do not match!")
+                );
+              },
+            }),
+          ]}
+        >
+          <Input.Password />
+        </Form.Item>
+
+        <Form.Item
+          name="agreement"
+          valuePropName="checked"
+          rules={[
+            {
+              validator: (_, value) =>
+                value
+                  ? Promise.resolve()
+                  : Promise.reject(new Error("Should accept agreement")),
+            },
+          ]}
+          {...tailFormItemLayout}
+        >
+          <Checkbox>
+            I have read the <a href="">agreement</a>
+          </Checkbox>
+        </Form.Item>
+        <Form.Item {...tailFormItemLayout}>
+          <Space>
+            {/* 회원가입 데이터 전송 */}
+            <Button type="primary" htmlType="submit">
+              Register
+            </Button>
+
+            {/* 로그인 창으로 이동 */}
+            <Button
+              type="primary"
+              htmlType="button"
+              onClick={() => navigate("/login")}
+            >
+              Member Login
+            </Button>
+          </Space>
         </Form.Item>
       </Form>
     </div>
