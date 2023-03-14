@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
-import { Button, Checkbox, Form, Input, Space } from "antd";
+import { Button, Checkbox, Form, Input, Space, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import { CallBacksFireBaseType } from "../AppContainer";
 
@@ -33,6 +33,17 @@ type PropsType = {
 };
 // css 코드는 App.css 넣어둠.
 const Join = ({ callBacksFireBase, userLogin }: PropsType) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    setIsModalOpen(false);
+    navigate("/login");
+  };
+
   // 웹브라우저 내용 갱신
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -41,6 +52,8 @@ const Join = ({ callBacksFireBase, userLogin }: PropsType) => {
     // firebase 로 회원가입에 필요한 정보 전송
     console.log("Received values of form: ", values);
     callBacksFireBase.fbJoin(values.email, values.password);
+    // 회원가입 성공 > login 창으로 이동
+    showModal();
   };
 
   useEffect(() => {
@@ -151,6 +164,19 @@ const Join = ({ callBacksFireBase, userLogin }: PropsType) => {
           </Space>
         </Form.Item>
       </Form>
+
+      <Modal
+        title="Basic Modal"
+        open={isModalOpen}
+        onOk={handleOk}
+        footer={[
+          <Button key="submit" type="primary" onClick={handleOk}>
+            확인
+          </Button>,
+        ]}
+      >
+        <p>회원가입이 되었습니다. 로그인창으로 이동합니다.</p>
+      </Modal>
     </div>
   );
 };
