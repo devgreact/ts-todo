@@ -286,7 +286,6 @@ const AppContainer = () => {
         console.log("errorMessage : ", errorMessage);
       });
   };
-
   // 사용자 가입
   const fbJoin = (email: string, password: string) => {
     createUserWithEmailAndPassword(auth, email, password)
