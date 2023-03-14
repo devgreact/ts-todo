@@ -18,6 +18,8 @@ import {
   User,
 } from "firebase/auth";
 
+import moment from "moment";
+
 export type TodoType = {
   uid: string;
   title: string;
@@ -38,33 +40,44 @@ export const todoSlice = createSlice({
   name: "todo",
   initialState,
   reducers: {
-    addTodo: (state, action: PayloadAction<TodoType>) => {
+    initTodoState: (state, action: PayloadAction<Array<TodoType>>) => {
+      state.todoList = action.payload;
+    },
+    addTodoState: (state, action: PayloadAction<TodoType>) => {
       state.todoList.push(action.payload);
     },
-    updateTodo: (state, action: PayloadAction<TodoType>) => {
+    updateTodoState: (state, action: PayloadAction<TodoType>) => {
       const index = state.todoList.findIndex(
         (item) => item.uid === action.payload.uid
       );
-      //   state.todoList[index].title = action.payload.title;
-      //   state.todoList[index].body = action.payload.body;
-      //   state.todoList[index].date = action.payload.date;
-      //   state.todoList[index].sticker = action.payload.sticker;
-      //   state.todoList[index].done = action.payload.done;
-      state.todoList[index] = { ...action.payload };
+      state.todoList[index].title = action.payload.title;
+      state.todoList[index].body = action.payload.body;
+      state.todoList[index].date = moment(action.payload.date).format(
+        "YYYY-MM-DD"
+      );
+      state.todoList[index].sticker = action.payload.sticker;
+      state.todoList[index].done = action.payload.done;
+      //   state.todoList[index] = { ...action.payload };
     },
-    deleteTodo: (state, action: PayloadAction<TodoType>) => {
+    deleteTodoState: (state, action: PayloadAction<TodoType>) => {
       const index = state.todoList.findIndex(
         (item) => item.uid === action.payload.uid
       );
       state.todoList.splice(index, 1);
     },
-    sortTodo: (state, action: PayloadAction<string>) => {},
-    clearTodo: (state) => {
+    sortTodoState: (state, action: PayloadAction<string>) => {},
+    clearTodoState: (state) => {
       state.todoList = [];
     },
   },
 });
 
-export const { addTodo, updateTodo, deleteTodo, sortTodo, clearTodo } =
-  todoSlice.actions;
+export const {
+  initTodoState,
+  addTodoState,
+  updateTodoState,
+  deleteTodoState,
+  sortTodoState,
+  clearTodoState,
+} = todoSlice.actions;
 export default todoSlice.reducer;
