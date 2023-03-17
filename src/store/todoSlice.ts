@@ -3,6 +3,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import { fireDB } from "../firebase";
 import {
   collection,
+  deleteDoc,
   doc,
   getDocs,
   query,
@@ -53,7 +54,7 @@ export const addTodoFB = createAsyncThunk(
         uid: tempTodo.uid,
         title: tempTodo.title,
         body: tempTodo.body,
-        date: tempTodo.date,
+        date: moment(tempTodo.date).format("YYYY-MM-DD"),
         sticker: tempTodo.sticker,
         done: false,
       });
@@ -73,7 +74,7 @@ export const updateTodoFB = createAsyncThunk(
         body: tempTodo.body,
         sticker: tempTodo.sticker,
         done: tempTodo.done,
-        date: moment(tempTodo.date).format("YYYY-MM-DD"),
+        date: tempTodo.date,
       });
     } catch (err) {
       return thunkAPI.rejectWithValue(err);
@@ -81,11 +82,45 @@ export const updateTodoFB = createAsyncThunk(
   }
 );
 // 목록 삭제
-export const deleteTodoFB = createAsyncThunk("todo/deleteTodo", async () => {});
+export const deleteTodoFB = createAsyncThunk(
+  "todo/deleteTodo",
+  async (tempTodo: TodoType, thunkAPI) => {
+    try {
+      const userDoc = doc(fireDB, firebaseStorageName, tempTodo.uid);
+      try {
+        const res = await deleteDoc(userDoc);
+        // console.log(res); // res는 undefined
+      } catch (e) {
+        console.log(e);
+      }
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err);
+    }
+  }
+);
 // 목록 검색
-export const sortTodoFB = createAsyncThunk("todo/sortTodo", async () => {});
+export const sortTodoFB = createAsyncThunk(
+  "todo/sortTodo",
+  async (sortType: string, thunkAPI) => {}
+);
 // 전체 삭제
-export const clearTodoFB = createAsyncThunk("todo/clearTodo", async () => {});
+export const clearTodoFB = createAsyncThunk(
+  "todo/clearTodo",
+  async (tempTodo: TodoType, thunkAPI) => {
+    try {
+      // firebase 데이터 1개 삭제
+      const userDoc = doc(fireDB, firebaseStorageName, tempTodo.uid);
+      try {
+        const res = await deleteDoc(userDoc);
+        // console.log(res); // res는 undefined
+      } catch (e) {
+        console.log(e);
+      }
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err);
+    }
+  }
+);
 
 // 초기 값 타입 정의
 export type TodoType = {
@@ -109,6 +144,7 @@ const initialState: TodoState = {
 export const todoSlice = createSlice({
   name: "todo",
   initialState,
+  // 동기 reducer : 즉시 실행
   reducers: {
     initTodoState: (state, action: PayloadAction<Array<TodoType>>) => {
       state.todoList = action.payload;
@@ -146,6 +182,47 @@ export const todoSlice = createSlice({
     clearTodoState: (state) => {
       state.todoList = [];
     },
+  },
+  // 비동기 reducer : 서버 연동
+  extraReducers: (builder) => {
+    // pending: 서버 연결
+    // fulfilled : 데이터 회신
+    // rejected : 데이터 회신 오류
+    builder
+      // 전체자료 호출
+      .addCase(getTodoFB.pending, (state, action) => {
+        console.log("getTodoFB.pending");
+      })
+      .addCase(getTodoFB.fulfilled, (state, action) => {
+        console.log("getTodoFB.fulfilled");
+        // 자료형을 변환해서 저장해야한다. typeScript
+        state.todoList = action.payload as Array<TodoType>;
+      })
+      .addCase(getTodoFB.rejected, (state, action) => {
+        console.log("getTodoFB.rejected");
+      })
+      // 할일 추가
+      .addCase(addTodoFB.pending, (state, action) => {})
+      .addCase(addTodoFB.fulfilled, (state, action) => {})
+      .addCase(addTodoFB.rejected, (state, action) => {})
+      // 수정
+      .addCase(updateTodoFB.pending, (state, action) => {})
+      .addCase(updateTodoFB.fulfilled, (state, action) => {
+        console.log(action.payload);
+      })
+      .addCase(updateTodoFB.rejected, (state, action) => {})
+      // 삭제
+      .addCase(deleteTodoFB.pending, (state, action) => {})
+      .addCase(deleteTodoFB.fulfilled, (state, action) => {})
+      .addCase(deleteTodoFB.rejected, (state, action) => {})
+      // 정렬
+      .addCase(sortTodoFB.pending, (state, action) => {})
+      .addCase(sortTodoFB.fulfilled, (state, action) => {})
+      .addCase(sortTodoFB.rejected, (state, action) => {})
+      // 전체 삭제
+      .addCase(clearTodoFB.pending, (state, action) => {})
+      .addCase(clearTodoFB.fulfilled, (state, action) => {})
+      .addCase(clearTodoFB.rejected, (state, action) => {});
   },
 });
 

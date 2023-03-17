@@ -1,15 +1,12 @@
 // store 관련
 import { useSelector, useDispatch } from "react-redux";
-import type { RootState } from "./store/store";
-// 로그인 관리 액션
+import type { AppDispatch, RootState } from "./store/store";
 import {
   fbLoginState,
   fbJoinState,
   fbLogoutState,
   fbDeleteUserState,
 } from "./store/userSlice";
-
-// todo 목록 관리 액션
 import {
   initTodoState,
   addTodoState,
@@ -17,22 +14,18 @@ import {
   deleteTodoState,
   sortTodoState,
   clearTodoState,
+  addTodoFB,
+  deleteTodoFB,
+  updateTodoFB,
+  clearTodoFB,
+  getTodoFB,
 } from "./store/todoSlice";
-
 // firebase 관련
-import { fireDB, auth } from "./firebase";
+import { auth } from "./firebase";
+
 import { useEffect } from "react";
 import App from "./App";
-import moment from "moment";
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  query,
-  setDoc,
-  updateDoc,
-} from "firebase/firestore";
+
 import {
   createUserWithEmailAndPassword,
   deleteUser,
@@ -47,7 +40,6 @@ export type TodoType = {
   sticker: string;
   date: string;
 };
-
 export type CallBacksType = {
   addTodo: (
     uid: string,
@@ -76,42 +68,15 @@ export type CallBacksFireBaseType = {
 
 const AppContainer = () => {
   // store 코드
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user);
   const todo = useSelector((state: RootState) => state.todo);
 
-  // firebase Storage 이름
-  const firebaseStorageName = "tsmemo";
-  // 컬렉션(DataBase 단위: MongoDB 참조) 불러오기
-  const memoCollectionRef = collection(fireDB, firebaseStorageName);
-
-  // 로컬스토리지 활용 : 파이어베이스로 변경
+  // 파이어베이스 전체 데이터 로드
   const getLocalData = async () => {
-    const q = await query(memoCollectionRef);
-    const data = await getDocs(q);
-    // console.log("firebase collection data : ", data);
-
-    if (data !== null) {
-      // initData = JSON.parse(data);
-      // 모든 데이터 가져와서 뜯기
-      // [ {}, {}, {}, ....]
-      const firebaseData = data.docs.map((doc) => ({
-        ...doc.data(),
-      }));
-      // firebaseData = [ {}, {}, {}, ....]
-      // Array<TodoType> 형태가 아니라서 아래로 변환한다.
-      const initData = firebaseData.map((item) => {
-        // 파이어베이스에서 가져온 데이터를
-        // TypeScript 에서 우리가 만든 Type 으로 형변환하기
-        return item as TodoType;
-      });
-
-      // setTodoList(Array<TodoType>) 형을 원했다.
-      dispatch(initTodoState(initData));
-    }
+    dispatch(getTodoFB());
   };
-
-  // 추가기능
+  // FB 추가기능
   const addTodo = async (
     uid: string,
     title: string,
@@ -120,92 +85,51 @@ const AppContainer = () => {
     sticker: string,
     date: string
   ) => {
-    // firebase 에 쓰기
-    try {
-      const res = await setDoc(doc(fireDB, firebaseStorageName, uid), {
+    dispatch(
+      addTodoFB({
         uid: uid,
         title: title,
         body: body,
         date: date,
         sticker: sticker,
         done: false,
-      });
-      // console.log(res); // res는 undefined입니다.
-    } catch (e) {
-      console.log(e);
-    }
-    // state 업데이트 : 화면 갱신
-    const tempTodo: TodoType = {
-      uid: uid,
-      title: title,
-      body: body,
-      date: date,
-      sticker: sticker,
-      done: false,
-    };
-    dispatch(addTodoState(tempTodo));
+      })
+    );
+    dispatch(
+      addTodoState({
+        uid: uid,
+        title: title,
+        body: body,
+        date: date,
+        sticker: sticker,
+        done: false,
+      })
+    );
   };
-  // 수정기능
+  // FB 수정기능
   const updateTodo = async (todo: TodoType) => {
-    // 원하는 데이터 가져옴
-    const userDoc = doc(fireDB, firebaseStorageName, todo.uid);
-    try {
-      const res = await updateDoc(userDoc, {
-        title: todo.title,
-        body: todo.body,
-        sticker: todo.sticker,
-        done: todo.done,
-        date: moment(todo.date).format("YYYY-MM-DD"),
-      });
-      console.log(res); // res는 undefined
-    } catch (e) {
-      // console.log(e);
-    } finally {
-      // console.log("end");
-    }
-
-    // 3. state를 업데이트한다.
-    let tempTodo: TodoType = {
-      uid: todo.uid,
-      title: todo.title,
-      body: todo.body,
-      date: moment(todo.date).format("YYYY-MM-DD"),
-      sticker: todo.sticker,
-      done: todo.done,
-    };
-    dispatch(updateTodoState(tempTodo));
+    // 서버 연동으로 비동기로 자료를 업로드
+    dispatch(updateTodoFB(todo));
+    // 동기로 즉시 State 업데이트
+    dispatch(updateTodoState(todo));
   };
   // 삭제기능
   const deleteTodo = async (todo: TodoType) => {
-    // firebase 데이터 1개 삭제
-    const userDoc = doc(fireDB, firebaseStorageName, todo.uid);
-    try {
-      const res = await deleteDoc(userDoc);
-      // console.log(res); // res는 undefined
-    } catch (e) {
-      console.log(e);
-    } finally {
-      console.log("end");
-    }
-
+    // 서버 연동으로 비동기로 자료를 삭제요청
+    // 서버작업
+    dispatch(deleteTodoFB(todo));
+    // 동기로 삭제 후 즉시 State 업데이트
+    // 즉시 store 의 state 갱신
     dispatch(deleteTodoState(todo));
   };
   // 전체 목록 삭제
   const clearTodo = () => {
-    todo.todoList.forEach(async (element) => {
-      // firebase 데이터 1개 삭제
-      const userDoc = doc(fireDB, firebaseStorageName, element.uid);
-      try {
-        const res = await deleteDoc(userDoc);
-        // console.log(res); // res는 undefined
-      } catch (e) {
-        console.log(e);
-      } finally {
-        console.log("end");
-      }
-    });
-
+    // 동기로 state 전체 자료 삭제후 즉시 화면 갱신
     dispatch(clearTodoState());
+    // 서버로 자료를 하나씩 보내서 처리
+    todo.todoList.forEach(async (element) => {
+      await dispatch(clearTodoFB(element));
+    });
   };
   // 정렬기능
   const sortTodo = (sortType: string) => {

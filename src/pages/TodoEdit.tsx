@@ -42,7 +42,7 @@ const TodoEdit = ({ states, callBacks }: propsType) => {
       uid: String(uid),
       title: values.title,
       body: values.body,
-      date: values.date,
+      date: moment(values.date).format("YYYY-MM-DD"),
       done: values.done,
       sticker: values.sticker,
     };
