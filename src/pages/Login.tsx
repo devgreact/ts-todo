@@ -36,7 +36,7 @@ const Login = ({ userLogin, callBacksFireBase }: PropsType) => {
   const [form] = Form.useForm();
 
   const onFinish = (values: any) => {
-    console.log("Success:", values);
+    // console.log("Success:", values);
     callBacksFireBase.fbLogin(values.email, values.password);
   };
 

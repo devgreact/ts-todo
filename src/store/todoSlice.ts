@@ -194,7 +194,6 @@ export const todoSlice = createSlice({
         console.log("getTodoFB.pending");
       })
       .addCase(getTodoFB.fulfilled, (state, action) => {
-        console.log("getTodoFB.fulfilled");
         // 자료형을 변환해서 저장해야한다. typeScript
         state.todoList = action.payload as Array<TodoType>;
       })
