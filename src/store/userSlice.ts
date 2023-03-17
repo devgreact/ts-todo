@@ -25,6 +25,8 @@ export const fbLoginFB = createAsyncThunk(
         tempUser.password
       );
       const user = userCredential.user;
+      console.log(user);
+
       // payload 전송
       return tempUser;
     } catch (error: any) {

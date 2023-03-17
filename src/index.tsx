@@ -10,6 +10,7 @@ import { Provider } from "react-redux";
 // persist 적용
 import { PersistGate } from "redux-persist/integration/react";
 import { persistStore } from "redux-persist";
+
 export let persistor = persistStore(store);
 
 const root = ReactDOM.createRoot(

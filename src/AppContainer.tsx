@@ -11,6 +11,7 @@ import {
   fbLogoutFB,
   fbDeleteUserFB,
 } from "./store/userSlice";
+
 import {
   initTodoState,
   addTodoState,
@@ -153,7 +154,6 @@ const AppContainer = () => {
 
   // 사용자 로그인 기능
   const fbLogin = (email: string, password: string) => {
-    console.log("실행했잖니?");
     dispatch(fbLoginFB({ email, password }));
   };
   // 사용자 가입
