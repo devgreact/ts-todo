@@ -59,4 +59,5 @@ export const {
   fbLogoutStateSaga,
   fbDeleteUserStateSaga,
 } = fbUserSlice.actions;
+
 export default fbUserSlice.reducer;
